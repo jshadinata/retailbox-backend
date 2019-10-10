@@ -207,9 +207,10 @@ Type::build('timestamp')
 
 // Plugin::load('Cors', ['bootstrap' => true, 'routes' => false]);
 
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: *');
-header('Access-Control-Allow-Headers: *');
+header('Access-Control-Allow-Origin: http://localhost:3000');
+header('Access-Control-Allow-Methods: GET, HEAD, PUT, PATCH, POST, DELETE');
+header('Access-Control-Allow-Headers: Accept, Accept-Language, Content-Language, Content-Type');
+header('Access-Control-Allow-Credentials: true');
 if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit(0);
 }

@@ -5,20 +5,12 @@ namespace App\Model\Table;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 
-class UsersTable extends Table {
+class CompaniesTable extends Table {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 
-        $this->hasOne('CurrentCompany',[
-            'className' => 'Companies',
-            'foreignKey' => 'id',
-            'bindingKey' => 'current_company_id'
-        ]);
-
-        $this->belongsToMany('Companies', ['through' => 'CompaniesUsers']);
-
-		$this->addBehavior('Timestamp');
+		$this->belongsToMany('Users', ['through' => 'CompaniesUsers']);
 	}
 
 	public function findKeywords(Query $query, array $options) {
@@ -26,7 +18,13 @@ class UsersTable extends Table {
         if (array_key_exists('q', $options)) {
             $q = $options['q'];
             $keywords = explode(' ', $q);
-            $fields = ['Users.username'];
+            $fields = [
+            	'Companies.name',
+            	'Companies.address',
+            	'Companies.phone',
+            	'Companies.email',
+            	'Companies.website',	
+            ];
             foreach ($fields as $field) {
                 $field_where = [];
                 foreach ($keywords as $keyword) {
