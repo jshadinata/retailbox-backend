@@ -8,7 +8,7 @@ class UsersController extends AppController {
 
 	protected $public_action = ['login', 'logout', 'unauthorized'];
 
-	protected $protected_action = ['whoami'];
+	protected $protected_action = ['whoami', 'listCompany'];
 
 	public function index() {
 		$this->paginate = [
@@ -56,6 +56,7 @@ class UsersController extends AppController {
 
 	public function logout() {
 		$this->Auth->logout();
+		$this->request->getSession()->destroy();
 		$result = true;
 		$message = 'OK. You are logged out.';
 		$this->set(compact('message', 'result'));
@@ -73,9 +74,15 @@ class UsersController extends AppController {
 				'CurrentCompany' => ['fields' => ['id', 'name']],				
 			],
 		])->toArray();
+		$user_rights = ''; // assume no rights
+
+		// add to session
+		$session = $this->request->getSession();
+		$session->write('User.id', $user_id);
+		$session->write('User.current_company_id', $user['current_company_id']);
+		$session->write('User.user_rights', $user_rights);
 
 		// load rights
-		$rights = '';
 		if ($user['current_company_id'] != null) {
 			$this->loadModel('CompaniesUsers');
 			$user_rights = $this->CompaniesUsers->find()
@@ -84,13 +91,35 @@ class UsersController extends AppController {
 						'company_id' => $user['current_company_id']
 					])
 					->first()->user_rights;			
-			$user['current_company']['user_rights'] = $user_rights; // add to $user
 
+			// add to $user
+			$user['current_company']['user_rights'] = $user_rights; 
+			
+			// rewrite session
+			$session->write('User.user_rights', $user_rights);
 		}
 		$result = true;		
 		$message = 'OK';
 		$this->set(compact('message', 'result', 'user'));
 		$this->set('_serialize', ['message', 'result', 'user']);
+	}
+
+	public function listCompany() {
+		$user_id = $this->request->getSession()->read('User.id');
+		// $this->loadModel('CompaniesUsers');
+		// $companies = $this->CompaniesUsers->find()
+		// 	->where(['user_id' => $user_id]);
+		$this->loadModel('Companies');
+		$companies = $this->Companies->find()			
+			->select(['id', 'name', 'address', 'phone', 'website'])
+			->matching('Users', function($q) use ($user_id) {
+				return $q->where(['Users.id' => $user_id]);
+			})
+			->toArray();
+		$result = true;
+		$message = 'OK';		
+		$this->set(compact('result', 'message', 'companies'));
+		$this->set('_serialize', ['result', 'message', 'companies']);
 	}
 
 }

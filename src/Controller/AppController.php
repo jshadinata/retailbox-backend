@@ -80,14 +80,16 @@ class AppController extends Controller {
         if (array_key_exists($this->request->action, $this->private_action)) {
             // at least one of these $key ($key can be single key or array)
             $session = $this->request->getSession();
-            $user_access_key = $session->read('User.access_key');            
+            $user_rights = $session->read('User.user_rights');            
             $key = $this->private_action[$this->request->action];
             if (is_array($key)) { // if array, check each key (only need one)
                 foreach ($key as $k) {
-                    if (strpos($user_access, $k) !== false) return true;
+                    $test = ":$k:"; // add : at beginning and end, prevent mixing small key in large key, eg: 10 in 1102
+                    if (strpos($user_rights, $test) !== false) return true;
                 }
-            } else { // not array, single key... EASY
-                if (strpos($user_access, $key) !== false) return true;
+            } else { // not array, single key... 
+                $test = ":$k:";
+                if (strpos($user_rights, $test) !== false) return true;
             }
         }
 
