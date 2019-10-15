@@ -8,7 +8,7 @@ class UsersController extends AppController {
 
 	protected $public_action = ['login', 'logout', 'unauthorized'];
 
-	protected $protected_action = ['whoami', 'listCompany'];
+	protected $protected_action = ['whoami', 'selectCompany'];
 
 	public function index() {
 		$this->paginate = [
@@ -40,8 +40,8 @@ class UsersController extends AppController {
 					->where(['id' => $user['id']])
 					->execute();
 					
-				$message = 'OK';
-				$result = true;
+				return $this->whoami(); // return like whoami()
+
 			} else {
 				$message = 'Invalid login. Please retype your username and password.';				
 				$result = false;
@@ -104,22 +104,42 @@ class UsersController extends AppController {
 		$this->set('_serialize', ['message', 'result', 'user']);
 	}
 
-	public function listCompany() {
-		$user_id = $this->request->getSession()->read('User.id');
-		// $this->loadModel('CompaniesUsers');
-		// $companies = $this->CompaniesUsers->find()
-		// 	->where(['user_id' => $user_id]);
-		$this->loadModel('Companies');
-		$companies = $this->Companies->find()			
-			->select(['id', 'name', 'address', 'phone', 'website'])
-			->matching('Users', function($q) use ($user_id) {
-				return $q->where(['Users.id' => $user_id]);
-			})
-			->toArray();
-		$result = true;
-		$message = 'OK';		
-		$this->set(compact('result', 'message', 'companies'));
-		$this->set('_serialize', ['result', 'message', 'companies']);
+	public function selectCompany() {
+		if ($this->request->is('post') && $this->request->data('company_id') != null) {
+
+			$company_id = $this->request->data('company_id');
+			$user_id = $this->request->getSession()->read('User.id');
+
+			// SELECT COUNT(*) FROM ....BLA BLA BLA
+			// IF COUNT > 0 THEN 
+			//    set current_company_id in users table, then return whoami()			
+			$this->loadModel('CompaniesUsers');
+			$query = $this->CompaniesUsers->find();
+			$count = $query->select([
+					'count' => $query->func()->count('*')
+				])
+				->where([
+					'company_id' => $company_id, 
+					'user_id' => $user_id,
+				])
+				->first()->count;
+			if ($count > 0)	 {
+				$query = $this->Users->query();				
+				$query->update()
+					->set(['current_company_id' => $company_id])
+					->where(['id' => $user_id])
+					->execute();
+				return $this->whoami();
+			} else {
+				$result = false;
+				$message = 'You are not member of this company';
+			}
+		} else {
+			$result = false;
+			$message = 'Nothing happened.';
+		}
+		$this->set(compact('message', 'result'));				
+		$this->set('_serialize', ['message', 'result']);
 	}
 
 }

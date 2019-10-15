@@ -47,10 +47,11 @@ class AppController extends Controller {
         $this->loadComponent('RequestHandler', [
             'enableBeforeRedirect' => false,
         ]);        
+
         // force all as JSON
         $this->RequestHandler->renderAs($this, 'json');
 
-        $this->loadComponent('Flash');
+        // $this->loadComponent('Flash');
 
         $this->loadComponent('Auth', [
             'authenticate'         => ['Form'],

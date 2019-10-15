@@ -4,14 +4,28 @@ namespace App\Model\Table;
 
 use Cake\ORM\Table;
 use Cake\ORM\Query;
+use Cake\ORM\RulesChecker;
+use Cake\Validation\Validator;
 
 class CompaniesTable extends Table {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
-
 		$this->belongsToMany('Users', ['through' => 'CompaniesUsers']);
 	}
+
+    public function validationDefault(Validator $validator) {
+        $validator
+            ->integer('id')
+            ->allowEmpty('id', 'create');
+
+        $validator
+            ->scalar('name')
+            ->requirePresence('name', 'create')
+            ->notEmpty('name');
+
+        return $validator;
+    }
 
 	public function findKeywords(Query $query, array $options) {
         $where = [];
