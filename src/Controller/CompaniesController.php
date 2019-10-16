@@ -27,7 +27,7 @@ class CompaniesController extends AppController {
 	public function get($id = null) {
 		$user_id = $this->request->getSession()->read('User.id');
 		$company = $this->Companies->find()
-			->select(['id', 'name', 'address', 'phone', 'website', 'api_key'])
+			->select(['id', 'name', 'address', 'phone', 'email', 'website', 'api_key'])
 			->where(['Companies.id'=>$id])
 			->matching('Users', function($q) use ($user_id) {
 				return $q->where(['Users.id' => $user_id]);
